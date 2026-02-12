@@ -15,6 +15,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Validate commit messages
         run: |
           regex='^(feat|fix|refactor|test|docs|chore)\(.+\): .+'
