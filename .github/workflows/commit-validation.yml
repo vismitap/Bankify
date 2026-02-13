@@ -19,22 +19,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Fetch full history for commit validation
 
       - name: Validate commit messages
         run: |
+          # Regex for conventional commits
           regex='^(feat|fix|refactor|test|docs|chore)\(.+\): .+'
 
+          # Get commits between base and head
           if [ -n "${GITHUB_BASE_REF}" ]; then
             commits=$(git log origin/$GITHUB_BASE_REF..HEAD --pretty=format:%s)
           else
-            commits=$(git log HEAD~10..HEAD --pretty=format:%s)
+            commits=$(git log HEAD~20..HEAD --pretty=format:%s)  # fallback for direct pushes
           fi
 
           echo "Checking commits..."
           for msg in $commits; do
+            # Skip merge commits from GitHub UI
+            if [[ $msg == Merge* ]]; then
+              echo "Skipping merge commit: $msg"
+              continue
+            fi
+
             echo "Commit: $msg"
-            echo "$msg" | grep -Eq "$regex" || (echo "Invalid commit message: $msg" && exit 1)
+            echo "$msg" | grep -Eq "$regex" || (echo "❌ Invalid commit message: $msg" && exit 1)
           done
 
-          echo "All commit messages are valid ✅"
+          echo "✅ All commit messages are valid"
