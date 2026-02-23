@@ -10,6 +10,10 @@ public enum ErrorCodeEnum {
 
     INSUFFICIENT_BALANCE("ACC-003", "Insufficient balance", HttpStatus.CONFLICT),
 
+    ACCOUNT_BALANCE_NOT_ZERO("ACC-004", "Account Balance not Zero, Cannot close account", HttpStatus.CONFLICT),
+    
+    INVALID_AMOUNT("ACC-005", "Invalid Amount", HttpStatus.CONFLICT),
+    
     ACCOUNT_ALREADY_CLOSED("ACC-004", "Account already closed", HttpStatus.CONFLICT),
 
     INTERNAL_ERROR("SYS-001", "Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);

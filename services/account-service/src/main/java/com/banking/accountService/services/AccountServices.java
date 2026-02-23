@@ -51,8 +51,9 @@ public class AccountServices implements IAccountServices{
 		account.setKycDone(false);
 		account.setMinBalance(0);
 		account.setOverdraftLimit(1000);		
-		if(dto.initialDeposit()!=null) account.setBalance(dto.initialDeposit());
-		
+		account.setBalance(
+			    dto.initialDeposit() == null ? BigDecimal.ZERO : dto.initialDeposit()
+			);		
 		return mapToResponse(repo.save(account));
 	}
 
@@ -69,6 +70,10 @@ public class AccountServices implements IAccountServices{
 	    AccountModel account = repo.findById(accountId)
 	            .orElseThrow(() -> new AccountNotFoundException(ErrorCodeEnum.ACCOUNT_NOT_FOUND));
 
+	    if(amount.compareTo(BigDecimal.ZERO) <= 0){
+	        throw new InvalidOperationException(ErrorCodeEnum.INVALID_AMOUNT);
+	    }
+	    
 	   if(account.getBalance()!=null) account.setBalance(account.getBalance().add(amount));
 
 	    return mapToResponse(repo.save(account));
@@ -79,8 +84,12 @@ public class AccountServices implements IAccountServices{
 	@Transactional
 	public AccountResponseRecord withdraw(Long accountId, BigDecimal amount) {
 		
+		
 		AccountModel account = repo.findById(accountId)
 	            .orElseThrow(() -> new AccountNotFoundException(ErrorCodeEnum.ACCOUNT_NOT_FOUND));
+		if(account.getBalance().compareTo(amount) < 0){
+		    throw new InsufficientBalanceException(ErrorCodeEnum.INSUFFICIENT_BALANCE);
+		}
 		if(account.getBalance()!=null) account.setBalance(account.getBalance().subtract(amount));
 		
 		return mapToResponse(account);
@@ -96,8 +105,8 @@ public class AccountServices implements IAccountServices{
 			throw new InvalidOperationException(ErrorCodeEnum.ACCOUNT_ALREADY_CLOSED);
 		}
 		
-		if(account.getBalance().compareTo(BigDecimal.ZERO)==0) {
-			throw new InsufficientBalanceException(ErrorCodeEnum.INSUFFICIENT_BALANCE);
+		if(account.getBalance().compareTo(BigDecimal.ZERO) != 0){
+		    throw new InvalidOperationException(ErrorCodeEnum.ACCOUNT_BALANCE_NOT_ZERO);
 		}
 		
 		account.setAccountstatus(AccountStatusEnum.CLOSED);
